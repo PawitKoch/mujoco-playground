@@ -20,7 +20,9 @@ Remote machine? `ssh -L 8080:localhost:8080 <host>` then open http://localhost:8
 
 import argparse
 import dataclasses
+import os
 import socket
+import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -166,7 +168,9 @@ def smoke() -> None:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--native", action="store_true", help="native Filament window instead of the web viewer")
+    p.add_argument("--native", action="store_true",
+                   help="native Filament window (on Linux, opens the web viewer in your browser instead; see README)")
+    p.add_argument("--force-native", action="store_true", help="try the native Filament window even on Linux")
     p.add_argument("--smoke", action="store_true", help="start the web viewer for 3 s and exit (for run_all)")
     p.add_argument("--port", type=int, default=0, help="web viewer port (0 = first free port >= 8080)")
     args = p.parse_args()
@@ -178,13 +182,22 @@ def main() -> None:
     model, data = load()
     # Stock Studio UI + stepping/history, plus our three plugins.
     plugins = [studio_app.App(), *studio_app.SIM_PLUGINS, EnergyProbe(), EnergyPanel(), TipVelocityArrow()]
-    if args.native:
+    open_browser = False
+    if args.native and not args.force_native and sys.platform.startswith("linux"):
+        print("Studio's native window crashes on Linux in mujoco 4.0.1 "
+              "(https://github.com/google-deepmind/mujoco/issues/3941); "
+              "using the web viewer instead. Pass --force-native to try it anyway.")
+        args.native = False
+        # Only auto-open a browser on a desktop session: over SSH, webbrowser may start a text browser in the terminal.
+        open_browser = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+    if args.native or args.force_native:
         from mujoco.studio import launch_native
 
         launch_native.run(viewer_protocol.ViewerConfig(title="mujoco-playground: Studio"),
                           model=model, data=data, plugins=plugins)
     else:
-        config = viewer_protocol.ViewerConfig(title="mujoco-playground: Studio", gfx="web", http_port=args.port)
+        config = viewer_protocol.ViewerConfig(title="mujoco-playground: Studio", gfx="web",
+                                              http_port=args.port, open_browser=open_browser)
         launch_web.run(config, model=model, data=data, plugins=plugins)
 
 

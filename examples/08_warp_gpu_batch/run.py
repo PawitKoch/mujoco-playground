@@ -19,6 +19,8 @@ Note: GPU numbers depend heavily on what else is running on the card. Check
 """
 
 import os
+import shutil
+import sys
 import time
 
 import matplotlib
@@ -148,7 +150,12 @@ def main() -> None:
     args = mjplay.example_args(__doc__, seconds=3.0, quick="tiny config for smoke tests")
     if args.viewer:
         # MJWarp ships its own interactive viewer that steps on the GPU.
-        os.execvp("mjwarp-viewer", ["mjwarp-viewer", str(MODEL)])
+        # Resolve next to this interpreter so it works with or without an activated venv.
+        exe = os.path.join(os.path.dirname(sys.executable), "mjwarp-viewer")
+        exe = exe if os.path.exists(exe) else shutil.which("mjwarp-viewer")
+        if exe is None:
+            sys.exit("mjwarp-viewer not found: run `uv sync --group gpu` (it ships with mujoco-warp)")
+        os.execv(exe, [exe, str(MODEL)])
     mjm =mujoco.MjModel.from_xml_path(str(MODEL))
     print(f"model: humanoid  nq={mjm.nq} nv={mjm.nv} ngeom={mjm.ngeom}  dt={mjm.opt.timestep}")
     print(f"warp device: {wp.get_device()}  ({wp.get_device().name})")

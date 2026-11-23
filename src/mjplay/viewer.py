@@ -13,9 +13,9 @@ from mjplay.render import StepFn
 
 def view(model: mujoco.MjModel, data: mujoco.MjData, step: StepFn | None = None) -> None:
     step = step or mujoco.mj_step
-    import mujoco.viewer  # imported lazily: needs a display
+    from mujoco import viewer as mj_viewer  # imported lazily: needs a display
 
-    with mujoco.viewer.launch_passive(model, data) as v:
+    with mj_viewer.launch_passive(model, data) as v:
         while v.is_running():
             tick = time.perf_counter()
             step(model, data)

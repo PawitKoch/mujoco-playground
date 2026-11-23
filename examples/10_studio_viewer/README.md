@@ -2,7 +2,7 @@
 
 ```bash
 uv run python examples/10_studio_viewer/run.py            # web viewer: open the printed URL
-uv run python examples/10_studio_viewer/run.py --native   # native Filament desktop window
+uv run python examples/10_studio_viewer/run.py --native   # Linux: opens the web viewer in your browser (see below)
 uv run python examples/10_studio_viewer/run.py --smoke    # headless self-test (3 s), used by run_all
 ```
 
@@ -44,7 +44,12 @@ Shortcut with no code at all: `uv run mujoco-studio --model=examples/10_studio_v
 
 - `--smoke`: the server returns its HTML page with HTTP 200 (25864 bytes), the sim steps, and the viewer-thread panel receives `EnergySnapshot` messages.
 - The full web UI mode starts and serves on `--port`.
-- `--native` was not exercised in this session because it needs a desktop session. On macOS, the non-blocking native launch requires `mjpython`.
+- **The native window is broken in mujoco-studio 4.0.1 on Linux (X11, NVIDIA)**: [mujoco#3941](https://github.com/google-deepmind/mujoco/issues/3941). Every direct-window mode (`--gfx` `''`, `opengl` or `vulkan`)
+  dies with `ValueError: Target not found:` in `NativeViewer.sync`. The stock `python -m mujoco.studio.viewer` fails the same way.
+  `opengl_headless` runs but opens no window. On Linux with mujoco-studio <= 4.0.1, `--native` therefore falls back to the web viewer, and opens your browser
+  when a desktop session is detected (same plugins and UI). `--force-native` still tries the real window, so you can check whether a later release fixed it.
+- The classic viewer (`python -m mujoco.viewer`, and `--viewer` in the other examples) is unaffected.
+- On macOS, the non-blocking native launch requires `mjpython`.
 
 ## Things to try
 
