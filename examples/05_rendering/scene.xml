@@ -1,0 +1,51 @@
+<!-- Rendering features new in MuJoCo 4.0:
+       * geom castshadow="false"       (per-geom shadow control, classic + Filament)
+       * visual/map/haze, visual/rgba/haze (Filament: infinite plane fades into the skybox)
+       * visual/headlight active="auto" (now the default; "false"/"true"/"auto" strings) -->
+<mujoco model="rendering_tour">
+  <statistic center="0 0 .5" extent="2.5"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960" azimuth="120" elevation="-20"/>
+    <quality shadowsize="4096"/>
+    <!-- "auto": the renderer decides. Filament/Studio turn the headlight on only
+         when the scene has no lights; legacy renderers treat auto as on. -->
+    <headlight active="auto"/>
+    <!-- haze covers the whole distance to the horizon; colour picked from the
+         skybox gradient near the horizon so the plane blends in seamlessly. -->
+    <map haze="1"/>
+    <rgba haze=".85 .75 .65 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".85 .75 .65" rgb2=".15 .3 .6" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".32 .36 .42" rgb2=".42 .46 .52" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".1"/>
+    <material name="metal" rgba=".75 .75 .8 1" metallic="1" roughness=".25"/>
+  </asset>
+
+  <worldbody>
+    <light name="sun" pos="3 -1 2.2" dir="-1 .35 -.7" cutoff="70" diffuse=".9 .85 .8"/>
+    <!-- size 0 0 = infinite plane: Filament centres it under the camera and hazes it into the sky -->
+    <geom name="floor" type="plane" size="0 0 .05" material="grid"/>
+
+    <!-- Twin pillars: identical except for castshadow. -->
+    <geom name="pillar_shadow" type="box" pos="-.5 0 .6" size=".08 .08 .6" rgba=".9 .5 .2 1"/>
+    <geom name="pillar_ghost" type="box" pos=".5 0 .6" size=".08 .08 .6" rgba=".2 .6 .9 1"
+          castshadow="false"/>
+
+    <!-- A ghost-style visual marker: a typical use of castshadow="false" is
+         debug/goal markers that should not darken the scene. -->
+    <geom name="goal_marker" type="sphere" pos="0 -.6 .4" size=".15" rgba="0 1 .3 .4"
+          contype="0" conaffinity="0" castshadow="false"/>
+
+    <body name="ball" pos="0 .6 .3">
+      <freejoint/>
+      <geom type="sphere" size=".3" material="metal"/>
+    </body>
+
+    <!-- low camera looking at the horizon to show haze -->
+    <camera name="horizon" pos="0 -4 2.5" xyaxes="1 0 0 0 .25 1" fovy="60"/>
+    <camera name="overview" pos="2.6 -2.6 2.2" xyaxes="1 1 0 -.35 .35 .87"/>
+  </worldbody>
+</mujoco>

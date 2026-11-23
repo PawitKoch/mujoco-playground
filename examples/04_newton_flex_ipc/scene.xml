@@ -1,0 +1,46 @@
+<!-- Two cloths dropped over a ball and a box. Cloth-cloth, self, and cloth-vs-static
+     contacts are all on. run.py re-runs this exact scene with different solvers:
+
+       solver="CG"      vs   solver="Newton"   (NEW 4.0: sparse Newton is 1.4-3x faster on flex)
+       <flag ipc="enable"/>                     (experimental: IPC-style contact for flexes,
+                                                 now also with Newton)
+
+     Flex elasticity is integrated implicitly by integrator="discrete". -->
+<mujoco model="cloth_drop">
+  <option timestep="0.002" solver="Newton" tolerance="1e-6" iterations="400" integrator="discrete"/>
+  <size memory="100M"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960"/>
+    <rgba haze=".15 .2 .25 1"/>
+    <quality shadowsize="4096"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .4 .55" rgb2=".05 .05 .1" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".15 .2 .25" rgb2=".2 .25 .3" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="4 4" texuniform="true"/>
+  </asset>
+
+
+  <worldbody>
+    <light pos="0 -1 2.5" dir="0 .4 -1" diffuse=".8 .8 .8"/>
+    <geom type="plane" size="2 2 .01" material="grid"/>
+    <geom name="ball" type="sphere" size=".2" pos="-.25 0 .2" rgba=".45 .45 .5 1"/>
+    <geom name="box" type="box" size=".15 .15 .15" pos=".25 0 .15" euler="0 0 30" rgba=".45 .45 .5 1"/>
+
+    <flexcomp name="cloth_a" type="grid" dim="2" count="17 17 1" spacing=".04 .04 .04" pos="-.25 0 .55"
+              radius=".004" mass=".25" rgba=".85 .35 .25 1">
+      <contact selfcollide="auto" passive="true" solref="0.01 1" solimp=".95 .99 .0001"/>
+      <elasticity young="4347.9" poisson="0.4" thickness="1.34e-3" elastic2d="both" damping="1e-2"/>
+    </flexcomp>
+    <flexcomp name="cloth_b" type="grid" dim="2" count="17 17 1" spacing=".04 .04 .04" pos=".25 0 .45"
+              euler="0 0 20" radius=".004" mass=".25" rgba=".25 .55 .8 1">
+      <contact selfcollide="auto" passive="true" solref="0.01 1" solimp=".95 .99 .0001"/>
+      <elasticity young="4347.9" poisson="0.4" thickness="1.34e-3" elastic2d="both" damping="1e-2"/>
+    </flexcomp>
+
+    <body name="look_at" pos="0 0 .2"/>
+    <camera name="front" pos=".2 -1.4 1.0" mode="targetbody" target="look_at"/>
+  </worldbody>
+</mujoco>

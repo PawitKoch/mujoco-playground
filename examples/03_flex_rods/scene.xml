@@ -1,0 +1,91 @@
+<!-- 1D flexcomp rods: MuJoCo 4's replacement for the removed `composite` cable
+     and `cable` plugin. Five rods are clamped to posts and sag under gravity.
+
+       noodle  : no <elasticity>  -> just an inextensible chain (no bending, no twist DOFs)
+       round   : circular section, young + shear -> bends and twists like a wire
+       flat    : NEW box section, the wide face horizontal  -> sags (weak axis)
+       edge    : same strip with sectionsize swapped (ruler on edge) -> stiff (strong axis)
+       arc     : NEW curved rest shape; it stays curved instead of straightening
+
+     1D rod bending requires integrator="discrete" (or Euler/RK4), not implicit(fast). -->
+<mujoco model="flex_rods">
+  <compiler autolimits="true"/>
+  <option timestep="0.002" integrator="discrete"/>
+  <size memory="20M"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960"/>
+    <rgba haze=".15 .2 .25 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .4 .55" rgb2=".05 .05 .1" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".15 .2 .25" rgb2=".2 .25 .3" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="4 4" texuniform="true"/>
+  </asset>
+
+  <default>
+    <default class="post">
+      <geom type="box" size=".02 .02 .2" rgba=".45 .45 .5 1"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light pos="0 -1 2" dir="0 .5 -1"/>
+    <geom type="plane" size="2 2 .01" material="grid"/>
+    <body name="look_at" pos="0 0 .3"/>
+    <camera name="front" pos=".9 -1.1 .8" mode="targetbody" target="look_at"/>
+    <camera name="side" pos="1.5 0 .5" mode="targetbody" target="look_at"/>
+
+    <!-- 17 vertices, 2.5 cm apart -> 40 cm rods; type="grid" is centred on pos, so each rod
+         spans x = -0.2 .. 0.2 and the clamp post sits at x = -0.22. <pin id="0 1"/> clamps the first edge
+         (position AND material frame) to the world, like composite initial="none". -->
+    <geom class="post" pos="-.22 -.4 .2"/>
+    <flexcomp name="noodle" type="grid" dim="1" count="17 1 1" spacing=".025 1 1" pos="0 -.4 .4"
+              radius=".006" mass=".05" rgba=".6 .6 .6 1">
+      <contact condim="1" selfcollide="none"/>
+      <edge equality="true"/>
+      <pin id="0 1"/>
+    </flexcomp>
+
+    <geom class="post" pos="-.22 -.2 .2"/>
+    <flexcomp name="round" type="grid" dim="1" count="17 1 1" spacing=".025 1 1" pos="0 -.2 .4"
+              radius=".006" mass=".05" rgba=".85 .35 .25 1">
+      <contact condim="1" selfcollide="none"/>
+      <edge equality="true"/>
+      <!-- bending stiffness from young; torsional stiffness from shear (NEW: overrides E/2(1+nu)) -->
+      <elasticity young="2e7" shear="8e6" damping=".005"/>
+      <pin id="0 1"/>
+    </flexcomp>
+
+    <geom class="post" pos="-.22 0 .2"/>
+    <flexcomp name="flat" type="grid" dim="1" count="17 1 1" spacing=".025 1 1" pos="0 0 .4"
+              mass=".05" rgba=".3 .6 .95 1">
+      <contact condim="1" selfcollide="none"/>
+      <edge equality="true"/>
+      <!-- NEW: box cross-section, half-sizes 12 mm (width) x 1.5 mm (height): a ruler lying flat -->
+      <elasticity young="1e8" damping=".005" section="box" sectionsize=".012 .0015"/>
+      <pin id="0 1"/>
+    </flexcomp>
+
+    <geom class="post" pos="-.22 .2 .2"/>
+    <flexcomp name="edge" type="grid" dim="1" count="17 1 1" spacing=".025 1 1" pos="0 .2 .4"
+              mass=".05" rgba=".3 .8 .5 1">
+      <contact condim="1" selfcollide="none"/>
+      <edge equality="true"/>
+      <!-- same strip, half-sizes swapped: now the 24 mm side is vertical -->
+      <elasticity young="1e8" damping=".005" section="box" sectionsize=".0015 .012"/>
+      <pin id="0 1"/>
+    </flexcomp>
+
+    <geom class="post" pos="-.22 .4 .2"/>
+    <flexcomp name="arc" type="direct" dim="1" pos="-.2 .4 .4" radius=".006" mass=".05" rgba=".95 .8 .3 1"
+              point="0.0000 0 0.0000 0.0261 0 0.0017 0.0518 0 0.0068 0.0765 0 0.0152 0.1000 0 0.0268 0.1218 0 0.0413 0.1414 0 0.0586 0.1587 0 0.0782 0.1732 0 0.1000 0.1848 0 0.1235 0.1932 0 0.1482 0.1983 0 0.1739 0.2000 0 0.2000"
+              element="0 1 1 2 2 3 3 4 4 5 5 6 6 7 7 8 8 9 9 10 10 11 11 12">
+      <contact condim="1" selfcollide="none"/>
+      <edge equality="true"/>
+      <elasticity young="2e7" damping=".005"/>
+      <pin id="0 1"/>
+    </flexcomp>
+  </worldbody>
+</mujoco>

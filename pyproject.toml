@@ -1,0 +1,31 @@
+[project]
+name = "mujoco-playground"
+version = "0.1.0"
+description = "Hands-on learning playground for MuJoCo 4 features"
+requires-python = ">=3.12"
+dependencies = [
+    "mujoco==4.0.1",
+    "mediapy",
+    "numpy",
+    "matplotlib",
+    "jupyterlab",
+    "pillow",
+]
+
+[dependency-groups]
+gpu = [
+    "mujoco-warp[cuda]==4.0.1",
+    "mujoco-mjx[warp]==4.0.1",
+    "jax[cuda12]",
+]
+gemini = [
+    "google-genai",
+    "python-dotenv",
+]
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "mjplay"

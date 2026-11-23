@@ -1,0 +1,33 @@
+<!-- A tendon from a fixed site (p1) to a site on a rotating arm (p2), wrapping
+     around a cylinder. The wrapping plane is x-z (the cylinder axis is y).
+     Change the sidesite below and rerun to see where the single discontinuity moves. -->
+<mujoco model="sidesite_sweep">
+  <compiler angle="degree"/>
+  <option gravity="0 0 0"/>
+  <visual><global offwidth="1280" offheight="960"/></visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .35 .45" rgb2=".05 .05 .1" width="32" height="512"/>
+  </asset>
+  <worldbody>
+    <light pos="0 -1 1" dir="0 1 -1"/>
+    <geom name="drum" type="cylinder" size=".1 .05" euler="90 0 0" rgba=".5 .5 .6 1"/>
+    <site name="p1" pos="-.3 0 0" size=".015" rgba="1 .3 .3 1"/>
+    <!-- Side site: straight below the drum, i.e. "go around the bottom".
+         The tendon snaps only when an endpoint crosses the ray OPPOSITE this
+         site: the +z ray straight above the drum. -->
+    <site name="side" pos="0 0 -.2" size=".012" rgba=".2 1 .3 1"/>
+    <site name="snap_ray" type="capsule" fromto="0 .02 .1  0 .02 .45" size=".003" rgba=".2 1 .3 .3"/>
+    <body name="arm">
+      <joint name="theta" type="hinge" axis="0 1 0"/>
+      <geom type="capsule" fromto="0 -.06 0 .3 -.06 0" size=".008" rgba=".8 .8 .85 .5" contype="0" conaffinity="0"/>
+      <site name="p2" pos=".3 0 0" size=".015" rgba=".3 .5 1 1"/>
+    </body>
+  </worldbody>
+  <tendon>
+    <spatial name="band" width=".005" rgba="1 .85 .2 1">
+      <site site="p1"/>
+      <geom geom="drum" sidesite="side"/>
+      <site site="p2"/>
+    </spatial>
+  </tendon>
+</mujoco>

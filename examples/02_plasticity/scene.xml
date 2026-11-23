@@ -1,0 +1,70 @@
+<!-- Two identical 8-link cantilevers made of hinge joints with joint springs.
+     Left  (red):  elastic       springyield="0"  (default)
+     Right (blue): elasto-plastic springyield="8"  (degrees, compiler angle="degree")
+     run.py pushes both tips with the same force, then lets go. -->
+<mujoco model="plastic_cantilever">
+  <compiler angle="degree"/>
+  <option timestep="0.002" gravity="0 0 0"/>
+
+  <visual>
+    <global offwidth="1280" offheight="960"/>
+    <rgba haze=".15 .2 .25 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .4 .55" rgb2=".05 .05 .1" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".15 .2 .25" rgb2=".2 .25 .3" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="4 4" texuniform="true"/>
+  </asset>
+
+  <default>
+    <!-- Every link: a hinge about y with a joint spring (rest angle = qpos_spring = 0). -->
+    <joint type="hinge" axis="0 1 0" stiffness="4" damping=".5"/>
+    <default class="link">
+      <geom type="capsule" fromto="0 0 0 .1 0 0" size=".012" mass=".05" contype="0" conaffinity="0"/>
+    </default>
+    <default class="plastic">
+      <!-- NEW IN 4.0: once the spring deflection exceeds 8 deg, the spring's rest
+           angle moves (stored in mjData.plastic) and the bend becomes permanent. -->
+      <joint springyield="8"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <light pos="0 -1 2" dir="0 .5 -1"/>
+    <geom type="plane" pos="0 0 -.4" size="2 2 .01" material="grid"/>
+
+    <!-- clamps -->
+    <geom type="box" pos="-.02 -.2 0" size=".02 .04 .04" rgba=".4 .4 .45 1"/>
+    <geom type="box" pos="-.02  .2 0" size=".02 .04 .04" rgba=".4 .4 .45 1"/>
+
+    <body name="e0" pos="0 -.2 0">
+      <joint name="e0"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e1"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e2"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e3"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e4"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e5"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body pos=".1 0 0"><joint name="e6"/><geom class="link" rgba=".9 .3 .3 1"/>
+      <body name="elastic_tip" pos=".1 0 0"><joint name="e7"/><geom class="link" rgba=".9 .3 .3 1"/>
+        <site name="elastic_tip" pos=".1 0 0" size=".02" rgba="1 1 1 1"/>
+      </body></body></body></body></body></body></body>
+    </body>
+
+    <body name="p0" pos="0 .2 0" childclass="plastic">
+      <joint name="p0"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p1"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p2"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p3"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p4"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p5"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body pos=".1 0 0"><joint name="p6"/><geom class="link" rgba=".3 .6 .95 1"/>
+      <body name="plastic_tip" pos=".1 0 0"><joint name="p7"/><geom class="link" rgba=".3 .6 .95 1"/>
+        <site name="plastic_tip" pos=".1 0 0" size=".02" rgba="1 1 1 1"/>
+      </body></body></body></body></body></body></body>
+    </body>
+
+    <camera name="front" pos=".4 -1.6 .15" xyaxes="1 0 0 0 .05 1"/>
+    <camera name="side" pos=".4 -.05 1.5" xyaxes="1 0 0 0 1 0"/>
+  </worldbody>
+</mujoco>

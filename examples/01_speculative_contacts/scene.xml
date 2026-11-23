@@ -1,0 +1,44 @@
+<!-- A 4 mm bullet fired at 60 m/s at a 1 cm thick wall.
+     timestep 2 ms  ->  the bullet moves 12 cm per step, 12x the wall thickness.
+     Without speculative contacts, discrete collision detection never sees the
+     overlap: at step k the bullet is in front of the wall, at step k+1 behind it. -->
+<mujoco model="bullet_vs_wall">
+  <option timestep="0.002" gravity="0 0 0">
+    <!-- NEW IN 4.0: conservative-advancement "speculative" contacts.
+         Flip this to "disable" (or pass --no-speculative to run.py) to watch it tunnel. -->
+    <flag speculative="enable"/>
+  </option>
+
+  <visual>
+    <global offwidth="1280" offheight="960"/>
+    <headlight active="auto"/>
+    <rgba haze=".15 .2 .25 1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".3 .4 .55" rgb2=".05 .05 .1" width="32" height="512"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".15 .2 .25" rgb2=".2 .25 .3" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="4 4" texuniform="true"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 -1 2" dir="0 .4 -1" diffuse=".8 .8 .8"/>
+    <geom type="plane" size="2 2 .01" material="grid" contype="0" conaffinity="0"/>
+
+    <!-- the thin wall: 1 cm thick (half-size 5 mm) -->
+    <geom name="wall" type="box" pos="0 0 .3" size=".005 .2 .2" rgba=".9 .6 .2 .6"/>
+
+    <body name="bullet" pos="-.6 0 .3">
+      <freejoint/>
+      <geom name="bullet" type="sphere" size=".004" mass=".01" rgba=".9 .1 .1 1"/>
+      <!-- a big translucent marker so you can see the 4 mm bullet in the video -->
+      <geom type="sphere" size=".03" rgba="1 .2 .2 .25" contype="0" conaffinity="0" mass="0"/>
+    </body>
+
+    <camera name="side" pos="0 -1.3 .45" xyaxes="1 0 0 0 .1 1"/>
+  </worldbody>
+
+  <keyframe>
+    <key name="fire" qpos="-.6 0 .3 1 0 0 0" qvel="60 0 0 0 0 0"/>
+  </keyframe>
+</mujoco>
